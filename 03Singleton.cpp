@@ -1,6 +1,7 @@
 /*
 * 单例模式。
 * 说明：禁止单例类的构造函数/拷贝构造函数/操作符=函数为public。通过提供的public static接口GetInstance获取单例对象。
+*       懒汉模式：使用时才构造与初始化。饿汉模式：程序启动时构造与初始化。
 * 好处：保证一个进程中只存在一个实例。
 * 问题：1.多线程使用时，如何保证线程安全？双重锁定保证线程安全。
         2.单例类构造函数若需要传参数，如何实现？模板变参实现多参数单例构造。
@@ -86,6 +87,9 @@ class SingletonT
 protected:
     SingletonT() {}
     virtual ~SingletonT() {}
+private:
+    SingletonT(const SingletonT &ot) {}
+    SingletonT& operator = (const SingletonT &ot) {}
 public:
     static T& GetInstance()
     {
@@ -110,9 +114,32 @@ T* SingletonT<T>::m_pInstance = NULL;
 template <class T>
 SpinLock SingletonT<T>::m_Lock;
 
-class Log : public SingletonT<Log>
+/*
+* 饿汉模式
+*/
+template <class T>
+class SingletonH
 {
-    friend class SingletonT<Log>;
+protected:
+    SingletonH() {}
+    virtual ~SingletonH() {}
+private:
+    SingletonH(const SingletonH &ot) {}
+    SingletonH& operator = (const SingletonH &ot) {}
+public:
+    static T& GetInstance()
+    {
+        return *m_pInstance;
+    }
+private:
+    static T* m_pInstance;
+};
+template<class T>
+T* SingletonH<T>::m_pInstance = new T();
+
+class Log : public SingletonH<Log>
+{
+    friend class SingletonH<Log>;
 protected:
     Log()
     {
